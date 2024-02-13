@@ -1,0 +1,52 @@
+﻿@using ImageMagick
+
+<h2>@Title</h2>
+<div class="drawn-sequence">
+	<img src="@DrawnSequencePng" height="@SequenceHeight"/>
+</div>
+<div class="ms1-spectra">
+	<iframe src="@Ms1WidgetPath" height="750" width="750"></iframe>
+	<iframe src="@Ms2WidgetPath" height="750" widht="750"></iframe>
+</div>
+<div class="legend">
+	<img src="@LegendPathPng" height="@LegendHeight" width="@LegendWidth" />
+</div>
+
+@code {
+	[Parameter]
+	public string Ms1WidgetPath { get; set; }
+	[Parameter]
+	public string Ms2WidgetPath { get; set; }
+	[Parameter]
+	public string LegendPathPng { get; set; }
+	[Parameter]
+	public string DrawnSequencePng { get; set; }
+	[Parameter]
+	public string Title { get; set; }
+
+	// legend png path height and width
+	int LegendHeight { get; set; }
+	int LegendWidth { get; set; }
+	// drawnsequence png height
+	int SequenceHeight { get; set; }
+
+	private void GetPngHeight()
+	{
+		using (MagickImage img = new())
+		{
+			img.Read(LegendPathPng); 
+			LegendHeight = img.Height; 
+			LegendWidth = img.Width; 
+		} 
+		using (MagickImage img = new())
+		{
+			img.Read(DrawnSequencePng);
+			SequenceHeight = img.Height; 
+		}
+	}
+	protected override void OnParametersSet()
+	{
+		GetPngHeight(); 
+		base.OnParametersSet();
+	}
+}

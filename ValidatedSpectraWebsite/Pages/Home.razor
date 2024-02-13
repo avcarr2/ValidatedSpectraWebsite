@@ -1,0 +1,81 @@
+﻿@page "/"
+@inject HttpClient httpClient
+@using ValidatedSpectraWebsite.Components
+
+
+<PageTitle>Validated Spectra</PageTitle>
+<FluentSelect Items="@files" AriaLabel="Spectrum Identifier" Label="Spectrum Identifier" @bind-Value="@SelectedFile"></FluentSelect>
+<div style="display:inline-block"> 
+	<FluentButton OnClick="@PreviousOnClick">Previous</FluentButton>
+	<br />
+	<FluentButton OnClick="@NextOnClick">Next</FluentButton>
+</div>
+
+<div id="display">
+	@if (SelectedFile is null)
+	{
+		<p>Loading...</p>
+	}
+	else
+	{
+		@((MarkupString)IdentifierToHtml[SelectedFile])
+	}
+</div>
+
+
+@code{
+	List<string> files
+	{
+		get
+		{
+			return IdentifierToHtml.Keys.ToList();
+		}
+	}
+
+	string SelectedFile { get; set; } 
+
+	Dictionary<string,string> IdentifierToHtml = new(); 
+
+	private async Task GetDirectoryFiles(){
+		var jsonOutput = await httpClient.GetFromJsonAsync<DtoContainer>("widgets/manifest/manifest.json"); 
+		IdentifierToHtml = jsonOutput.Tests.ToDictionary(j => j.Id.First(), k => k.Html.First()); 
+	}
+	protected override async Task OnInitializedAsync(){
+		await GetDirectoryFiles(); 
+		SelectedFile = IdentifierToHtml.First().Key; 
+		base.OnInitialized(); 
+	}
+	class DtoContainer
+	{
+		public List<Dto> Tests { get; set; }
+	}
+	class Dto{
+		public string[] Id { get; set; }
+		public string[] Html { get; set; }
+	}
+	void NextOnClick(){
+		int index = IdentifierToHtml.Keys.ToList().IndexOf(SelectedFile);
+
+		if(index + 1 >= IdentifierToHtml.Count)
+		{
+			return;
+		}
+		else
+		{
+			SelectedFile = IdentifierToHtml.Keys.ElementAt(index + 1); 
+		}
+	}
+	void PreviousOnClick(){
+		int index = IdentifierToHtml.Keys.ToList().IndexOf(SelectedFile);
+
+		if (index - 1 < 0)
+		{
+			return;
+		}
+		else
+		{
+			SelectedFile = IdentifierToHtml.Keys.ElementAt(index - 1);
+		}
+	}
+}
+
